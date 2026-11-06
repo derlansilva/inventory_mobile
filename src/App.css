@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sap-bg: #f5f6f7;
+  --color-sap-header: #354a5f;
+  --color-sap-primary: #0a6ed1;
+  --color-sap-card: #ffffff;
+  --color-sap-text: #32363a;
+}
+
+html, body, #root {
+  
+  color: #111827;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f5f6f7;
+}
+
+
+
+/* Força títulos e textos principais a nunca ficarem transparentes ou claros em fundos claros */
+h1, h2, h3, h4, h5, h6 {
+  color: #1f2937 !important;
+}
