@@ -1,115 +1,102 @@
-// src/App.tsx
 import React, { useState } from 'react';
 import CollectorSimulator from './components/CollectorSimulator';
 import BlindReceiving from './components/BlindReceiving';
-import "./App.css"
+import "./App.css";
 
-// Adicionado RECEBIMENTO_CEGO no tipo
 type ScreenState = 'MENU' | 'RECEBIMENTO_DEVOLUCAO' | 'RECEBIMENTO_CEGO' | 'CARREGAMENTO';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('MENU');
 
   return (
-    <div className="bg-gray-100 h-screen w-screen text-gray-800 font-sans flex flex-col justify-between overflow-hidden select-none">
-
-      {currentScreen === 'MENU' ? (
-        <>
-          {/* CABEÇALHO DO MENU */}
-          <header className="bg-[#002B49] text-white px-4 py-3 flex flex-col items-center justify-center shadow-md shrink-0">
-            <h1 className="font-bold text-sm tracking-wider uppercase ">WMS Coletora Zebra</h1>
-            <span className="text-[10px] text-gray-300 font-mono mt-0.5">v1.0 • IP: 150.X.X.X</span>
+    // h-screen e max-w-md mx-auto fazem a tela se comportar como um celular/coletor centralizado
+    <div className="bg-slate-200 h-screen w-full text-gray-800 font-sans flex flex-col overflow-hidden select-none">
+      <div className="w-full h-full max-w-md mx-auto bg-gray-100 flex flex-col justify-between shadow-xl relative">
+        
+        {currentScreen === 'MENU' ? (
+          <>
+              {/* CABEÇALHO DO MENU */}
+          <header className="bg-[#002B49] px-4 py-3 flex flex-col items-center justify-center shadow-md shrink-0">
+            <h3 className="!text-white font-bold text-base tracking-widest uppercase m-0 p-0">
+              WMS Coletora Zebra
+            </h3>
+            <span className="!text-slate-300 text-[10px] font-mono mt-1 m-0 p-0">
+              v1.0 • IP: 150.X.X.X
+            </span>
           </header>
 
-          {/* MENU PRINCIPAL */}
-          <main className="p-4 flex-1 flex flex-col min-h-0 justify-center space-y-3 overflow-y-auto max-w-md mx-auto w-full">
-            <div className="text-center mb-1">
-              <span className="text-xs font-bold text-[#002B49] uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-200 inline-block">
-                Selecione a Operação
-              </span>
-            </div>
-
-            {/* OPÇÃO 1: RECEBIMENTO DEVOLUÇÃO */}
-            <button
-              onClick={() => setCurrentScreen('RECEBIMENTO_DEVOLUCAO')}
-              className="w-full bg-white border border-gray-300 active:bg-blue-50 p-3.5 rounded-lg shadow-sm flex items-center justify-between transition cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="bg-blue-900 text-white font-mono font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
-                  1
-                </div>
-                <div className="text-left">
-                  <span className="block font-bold text-xs text-blue-900 uppercase">
-                    Recebimento Devolução
-                  </span>
-                  <span className="block text-[10px] text-gray-500">
-                    Conferência de NFs e Romaneios
-                  </span>
-                </div>
+            {/* MENU PRINCIPAL */}
+            <main className="p-4 flex-1 flex flex-col justify-center space-y-4 overflow-y-auto">
+              <div className="text-center mb-2">
+                <span className="text-xs font-bold text-[#002B49] uppercase tracking-wider bg-blue-50 px-4 py-1.5 rounded-full border border-blue-200 inline-block">
+                  Selecione a Operação
+                </span>
               </div>
-            </button>
 
-            {/* OPÇÃO 2: RECEBIMENTO CEGO */}
-            <button
-              onClick={() => setCurrentScreen('RECEBIMENTO_CEGO')}
-              className="w-full bg-white border border-gray-300 active:bg-gray-100 p-3.5 rounded-lg shadow-sm flex items-center justify-between transition cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="bg-pink-600 text-white font-mono font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
-                  2
+              {/* OPÇÃO 1: RECEBIMENTO DEVOLUÇÃO */}
+              <button
+                onClick={() => setCurrentScreen('RECEBIMENTO_DEVOLUCAO')}
+                className="w-full bg-white border border-gray-300 active:bg-blue-50 p-4 rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="bg-blue-900 text-white font-mono font-bold text-sm w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                    1
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-bold text-sm text-blue-900 uppercase">Recebimento Devolução</span>
+                    <span className="block text-[11px] text-gray-500">Conferência de NFs e Romaneios</span>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <span className="block font-bold text-xs text-gray-800 uppercase">
-                    Recebimento Cego
-                  </span>
-                  <span className="block text-[10px] text-gray-500">
-                    Entrada de paletes e docas
-                  </span>
+              </button>
+
+              {/* OPÇÃO 2: RECEBIMENTO CEGO */}
+              <button
+                onClick={() => setCurrentScreen('RECEBIMENTO_CEGO')}
+                className="w-full bg-white border border-gray-300 active:bg-gray-100 p-4 rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="bg-pink-600 text-white font-mono font-bold text-sm w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                    2
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-bold text-sm text-gray-800 uppercase">Recebimento Cego</span>
+                    <span className="block text-[11px] text-gray-500">Entrada de paletes e docas</span>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
 
-            {/* OPÇÃO 3: CARREGAMENTO */}
-            <button
-              onClick={() => alert('Módulo de Carregamento em desenvolvimento')}
-              className="w-full bg-white border border-gray-300 active:bg-gray-100 p-3.5 rounded-lg shadow-sm flex items-center justify-between transition cursor-pointer"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="bg-gray-200 text-gray-700 font-mono font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
-                  3
+              {/* OPÇÃO 3: CARREGAMENTO */}
+              <button
+                onClick={() => alert('Módulo de Carregamento em desenvolvimento')}
+                className="w-full bg-white border border-gray-300 active:bg-gray-100 p-4 rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gray-200 text-gray-700 font-mono font-bold text-sm w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                    3
+                  </div>
+                  <div className="text-left">
+                    <span className="block font-bold text-sm text-gray-800 uppercase">Carregamento</span>
+                    <span className="block text-[11px] text-gray-500">Expedição e conferência de saída</span>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <span className="block font-bold text-xs text-gray-800 uppercase">
-                    Carregamento
-                  </span>
-                  <span className="block text-[10px] text-gray-500">
-                    Expedição e conferência de saída
-                  </span>
-                </div>
-              </div>
-            </button>
-          </main>
+              </button>
+            </main>
 
-          {/* RODAPÉ DO MENU */}
-          <footer className="bg-gray-200 border-t border-gray-300 px-3 py-2 text-center text-[10px] text-gray-600 font-mono shrink-0">
-            Operador: <strong className="text-gray-800">Sem Autenticação</strong>
-          </footer>
-        </>
-      ) : currentScreen === 'RECEBIMENTO_CEGO' ? (
-        
-        /* TELA DE RECEBIMENTO CEGO */
-        <div className="flex-1 flex flex-col min-h-0 w-full">
-          <BlindReceiving onBack={() => setCurrentScreen('MENU')} />
-        </div>
-
-      ) : (
-        
-        /* TELA DE RECEBIMENTO DEVOLUÇÃO NORMAL */
-        <div className="flex-1 flex flex-col min-h-0 w-full">
-          <CollectorSimulator onBack={() => setCurrentScreen('MENU')} />
-        </div>
-      )}
-
+            {/* RODAPÉ DO MENU */}
+            <footer className="bg-gray-200 border-t border-gray-300 px-3 py-3 text-center text-[10px] text-gray-600 font-mono shrink-0">
+              Operador: <strong className="text-gray-800">Sem Autenticação</strong>
+            </footer>
+          </>
+        ) : currentScreen === 'RECEBIMENTO_CEGO' ? (
+          <div className="flex-1 flex flex-col min-h-0 w-full">
+            <BlindReceiving onBack={() => setCurrentScreen('MENU')} />
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col min-h-0 w-full">
+            <CollectorSimulator onBack={() => setCurrentScreen('MENU')} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
