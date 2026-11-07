@@ -39,6 +39,8 @@ export const apiServices = {
     const response = await api.post('/returns/provisory-manifest', data);
     return response.data;
   },
+
+
   createReceiving: async (data: { receivingCode: string, volumes: any[] }) => {
     try {
       const response = await api.post('/receiving/create', data);
@@ -61,4 +63,11 @@ export const apiServices = {
     return response.data;
   },
 
-};
+
+    checkInvoiceStatus: async (invoiceNumber: string) => {
+    // Note que usamos api.get (e não api.post)
+    const response = await api.get(`/receiving/check-invoice/${invoiceNumber}`);
+    return response.data;
+  },
+
+}

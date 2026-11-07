@@ -29,7 +29,8 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
     }
   }, [scannedBoxes]);
 
-  const handleScanBox = (e: React.FormEvent) => {
+  
+    const handleScanBox = async (e: React.FormEvent) => {
     e.preventDefault();
     const codigoLido = labelBarcode.trim();
     
@@ -37,11 +38,13 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
 
     setLoading(true);
 
-    setTimeout(() => {
-      const nfNumber = codigoLido; 
+    try {
+      // 1. Verifica no servidor
+      await apiServices.checkInvoiceStatus(codigoLido);
 
+      // 2. Se passou, adiciona na lista
       setScannedBoxes(prevBoxes => {
-        const existingBoxIndex = prevBoxes.findIndex(box => box.nfNumber === nfNumber);
+        const existingBoxIndex = prevBoxes.findIndex(box => box.nfNumber === codigoLido);
         
         if (existingBoxIndex >= 0) {
           const updatedBoxes = [...prevBoxes];
@@ -54,7 +57,7 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
           const newBox: ScannedBox = {
             id: Date.now().toString(),
             labelBarcode: codigoLido,
-            nfNumber: nfNumber,
+            nfNumber: codigoLido,
             quantidade: 1
           };
           return [newBox, ...prevBoxes];
@@ -62,15 +65,28 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
       });
 
       setLabelBarcode(''); 
+      
+    } catch (error: any) {
+      const errorMsg = error.response?.data || "Erro ao validar a NF.";
+      
+      // Exibe a mensagem de erro
+      setMessage({ text: errorMsg, type: 'error' });
+      
+      // A MÁGICA ACONTECE AQUI: Limpa o input após o erro
+      setLabelBarcode(''); 
+      
+      // Remove a mensagem após 4 segundos
+      setTimeout(() => setMessage(null), 4000);
+    } finally {
       setLoading(false);
-
+      
+      // Devolve o foco para o input (para a próxima leitura)
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
-
-      setTimeout(() => setMessage(null), 2000);
-    }, 200);
+    }
   };
+
 
   const handleFinishReceiving = async () => {
     if (scannedBoxes.length === 0) return;
@@ -143,7 +159,7 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
           )}
         </div>
 
-        {/* INPUT DE BIPAGEM (SEM BOTÃO OK) */}
+        
         <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm shrink-0">
           <label className="block text-center text-[11px] font-bold text-pink-600 mb-2 tracking-widest uppercase">
             Bipar Etiqueta Rosa
