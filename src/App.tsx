@@ -1,19 +1,23 @@
+// src/App.tsx
 import React, { useState } from 'react';
 import CollectorSimulator from './components/CollectorSimulator';
+import BlindReceiving from './components/BlindReceiving';
 import "./App.css"
-type ScreenState = 'MENU' | 'RECEBIMENTO_DEVOLUCAO' | 'DESCARGA' | 'CARREGAMENTO';
+
+// Adicionado RECEBIMENTO_CEGO no tipo
+type ScreenState = 'MENU' | 'RECEBIMENTO_DEVOLUCAO' | 'RECEBIMENTO_CEGO' | 'CARREGAMENTO';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('MENU');
 
   return (
     <div className="bg-gray-100 h-screen w-screen text-gray-800 font-sans flex flex-col justify-between overflow-hidden select-none">
-      
+
       {currentScreen === 'MENU' ? (
         <>
           {/* CABEÇALHO DO MENU */}
           <header className="bg-[#002B49] text-white px-4 py-3 flex flex-col items-center justify-center shadow-md shrink-0">
-            <h1 className="font-bold text-sm tracking-wider uppercase">WMS Coletora Zebra</h1>
+            <h1 className="font-bold text-sm tracking-wider uppercase ">WMS Coletora Zebra</h1>
             <span className="text-[10px] text-gray-300 font-mono mt-0.5">v1.0 • IP: 150.X.X.X</span>
           </header>
 
@@ -25,7 +29,7 @@ export default function App() {
               </span>
             </div>
 
-            {/* OPÇÃO 1: RECEBIMENTO DEVOLUÇÃO (Sem borda azul forte, igual aos outros) */}
+            {/* OPÇÃO 1: RECEBIMENTO DEVOLUÇÃO */}
             <button
               onClick={() => setCurrentScreen('RECEBIMENTO_DEVOLUCAO')}
               className="w-full bg-white border border-gray-300 active:bg-blue-50 p-3.5 rounded-lg shadow-sm flex items-center justify-between transition cursor-pointer"
@@ -45,18 +49,18 @@ export default function App() {
               </div>
             </button>
 
-            {/* OPÇÃO 2: DESCARGA */}
+            {/* OPÇÃO 2: RECEBIMENTO CEGO */}
             <button
-              onClick={() => alert('Módulo de Descarga em desenvolvimento')}
+              onClick={() => setCurrentScreen('RECEBIMENTO_CEGO')}
               className="w-full bg-white border border-gray-300 active:bg-gray-100 p-3.5 rounded-lg shadow-sm flex items-center justify-between transition cursor-pointer"
             >
               <div className="flex items-center space-x-3">
-                <div className="bg-gray-200 text-gray-700 font-mono font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
+                <div className="bg-pink-600 text-white font-mono font-bold text-xs w-6 h-6 rounded flex items-center justify-center shrink-0">
                   2
                 </div>
                 <div className="text-left">
                   <span className="block font-bold text-xs text-gray-800 uppercase">
-                    Descarga
+                    Recebimento Cego
                   </span>
                   <span className="block text-[10px] text-gray-500">
                     Entrada de paletes e docas
@@ -91,8 +95,16 @@ export default function App() {
             Operador: <strong className="text-gray-800">Sem Autenticação</strong>
           </footer>
         </>
+      ) : currentScreen === 'RECEBIMENTO_CEGO' ? (
+        
+        /* TELA DE RECEBIMENTO CEGO */
+        <div className="flex-1 flex flex-col min-h-0 w-full">
+          <BlindReceiving onBack={() => setCurrentScreen('MENU')} />
+        </div>
+
       ) : (
-        /* TELA DE CONFERÊNCIA (Ocupando 100% da coletora) */
+        
+        /* TELA DE RECEBIMENTO DEVOLUÇÃO NORMAL */
         <div className="flex-1 flex flex-col min-h-0 w-full">
           <CollectorSimulator onBack={() => setCurrentScreen('MENU')} />
         </div>

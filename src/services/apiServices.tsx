@@ -34,16 +34,31 @@ export const apiServices = {
     }
   },
 
-  // NOVO: Método para dar baixa unitária ao bipar na Coletora Zebra
-  scanItem: async (itemId: number) => {
+ 
+  createProvisoryManifest: async (data: { manifestCode: string, volumes: any[] }) => {
+    const response = await api.post('/returns/provisory-manifest', data);
+    return response.data;
+  },
+  createReceiving: async (data: { receivingCode: string, volumes: any[] }) => {
     try {
-      const response = await api.patch(`/returns/items/${itemId}/scan`);
+      const response = await api.post('/receiving/create', data);
       return response.data;
     } catch (error) {
-      console.error("Erro ao bipar item na coletora:", error);
+      console.error("Erro ao criar recebimento:", error);
       throw error;
     }
   },
 
-  
+    // Busca os itens da NF para conferência
+  getInvoiceForScanning: async (invoiceNumber: string) => {
+    const response = await api.get(`/receiving/scan-invoice/${invoiceNumber}`);
+    return response.data;
+  },
+
+  // Bipa o item (EAN)
+  scanItem: async (invoiceNumber: string, eanCode: string) => {
+    const response = await api.post(`/receiving/scan-item/${invoiceNumber}`, { eanCode });
+    return response.data;
+  },
+
 };
