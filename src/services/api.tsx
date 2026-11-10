@@ -1,4 +1,4 @@
-/*import axios from 'axios';
+import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'https://gamwms.onrender.com/api/v1/',
@@ -9,7 +9,7 @@ const api = axios.create({
 
 // ... (o resto do seu apiServices continua igual)
 export default api;
-*/
+/*
 
 import axios from 'axios';
 
@@ -20,4 +20,4 @@ const api = axios.create({
   },
 });
 
-export default api;
+export default api;*/
