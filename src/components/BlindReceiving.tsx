@@ -22,83 +22,70 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Foco automático no input
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (inputRef.current) inputRef.current.focus();
   }, [scannedBoxes]);
 
-  
-    const handleScanBox = async (e: React.FormEvent) => {
+  const handleScanBox = async (e: React.FormEvent) => {
     e.preventDefault();
     const codigoLido = labelBarcode.trim();
     
     if (!codigoLido) return;
 
+    const jaBipadoNaTela = scannedBoxes.some(box => box.nfNumber === codigoLido);
+    if (jaBipadoNaTela) {
+      setMessage({ text: `A NF ${codigoLido} já foi adicionada nesta conferência!`, type: 'error' });
+      setLabelBarcode('');
+      setTimeout(() => setMessage(null), 3000);
+      return; 
+    }
+
     setLoading(true);
+    setMessage(null);
 
     try {
-      // 1. Verifica no servidor
       await apiServices.checkInvoiceStatus(codigoLido);
 
-      // 2. Se passou, adiciona na lista
-      setScannedBoxes(prevBoxes => {
-        const existingBoxIndex = prevBoxes.findIndex(box => box.nfNumber === codigoLido);
-        
-        if (existingBoxIndex >= 0) {
-          const updatedBoxes = [...prevBoxes];
-          updatedBoxes[existingBoxIndex] = {
-            ...updatedBoxes[existingBoxIndex],
-            quantidade: updatedBoxes[existingBoxIndex].quantidade + 1
-          };
-          return updatedBoxes;
-        } else {
-          const newBox: ScannedBox = {
-            id: Date.now().toString(),
-            labelBarcode: codigoLido,
-            nfNumber: codigoLido,
-            quantidade: 1
-          };
-          return [newBox, ...prevBoxes];
-        }
-      });
+      setScannedBoxes(prevBoxes => [
+        { id: Date.now().toString(), labelBarcode: codigoLido, nfNumber: codigoLido, quantidade: 1 },
+        ...prevBoxes
+      ]);
 
+      setMessage({ text: `NF ${codigoLido} adicionada!`, type: 'success' });
       setLabelBarcode(''); 
       
     } catch (error: any) {
-      const errorMsg = error.response?.data || "Erro ao validar a NF.";
-      
-      // Exibe a mensagem de erro
+      let errorMsg = "Erro ao validar a NF.";
+      if (error.response?.data) {
+        errorMsg = typeof error.response.data === 'string' ? error.response.data : error.response.data.message;
+      }
       setMessage({ text: errorMsg, type: 'error' });
-      
-      // A MÁGICA ACONTECE AQUI: Limpa o input após o erro
-      setLabelBarcode(''); 
-      
-      // Remove a mensagem após 4 segundos
+      setLabelBarcode('');
       setTimeout(() => setMessage(null), 4000);
     } finally {
       setLoading(false);
-      
-      // Devolve o foco para o input (para a próxima leitura)
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
-
-  const handleFinishReceiving = async () => {
+    const handleFinishReceiving = async () => {
     if (scannedBoxes.length === 0) return;
 
     try {
       setIsSubmitting(true);
       setMessage(null);
 
-      const receivingCode = `REC-${Date.now().toString().slice(-6)}`;
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+
+      const manifestCode = `GAM-${day}${month}${hours}${minutes}`;
 
       const payload = {
-        receivingCode: receivingCode,
+        manifestCode: manifestCode,
+        receivingCode: scannedBoxes[0].nfNumber, 
         volumes: scannedBoxes.map(box => ({
           nfNumber: box.nfNumber,
           quantidade: box.quantidade
@@ -107,18 +94,11 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
 
       await apiServices.createReceiving(payload);
 
-      setMessage({ text: `Recebimento ${receivingCode} enviado com sucesso!`, type: 'success' });
-      
-      setTimeout(() => {
-        onBack();
-      }, 1500);
+      setMessage({ text: `Manifesto ${manifestCode} enviado com sucesso!`, type: 'success' });
+      setTimeout(() => onBack(), 1500);
 
     } catch (error: any) {
-      console.error("Erro ao criar recebimento:", error);
-      setMessage({ 
-        text: error.response?.data?.message || "Erro ao enviar recebimento para o servidor.", 
-        type: 'error' 
-      });
+      setMessage({ text: error.response?.data?.message || "Erro ao enviar.", type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -127,41 +107,38 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
   const totalCaixas = scannedBoxes.reduce((acc, curr) => acc + curr.quantidade, 0);
 
   return (
+    // ALTERAÇÃO VISUAL: Mantido o layout geral
     <div className="bg-gray-100 h-full w-full text-gray-800 font-sans flex flex-col overflow-hidden">
       
-      {/* HEADER */}
-      <div className="bg-[#002B49] text-white px-4 py-3 flex items-center justify-between shadow-xs shrink-0">
+      {/* ALTERAÇÃO VISUAL: Cabeçalho mais fino (px-3 py-2) */}
+      <div className="bg-[#002B49] text-white px-3 py-2 flex items-center justify-between shadow-xs shrink-0">
         <div className="flex items-center space-x-2">
-          <Barcode className="w-5 h-5 text-amber-400" />
+          <Barcode className="w-4 h-4 text-amber-400" />
           <span className="font-bold text-xs tracking-wide">Recebimento Cego</span>
         </div>
-        <button 
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="text-[11px] bg-red-700 hover:bg-red-800 disabled:opacity-50 px-3 py-1.5 rounded text-white font-bold transition cursor-pointer"
-        >
+        <button onClick={onBack} disabled={isSubmitting} className="text-[10px] bg-red-700 hover:bg-red-800 disabled:opacity-50 px-2.5 py-1 rounded text-white font-bold transition cursor-pointer">
           Voltar
         </button>
       </div>
 
-      {/* ÁREA CENTRAL */}
-      <div className="flex-1 flex flex-col min-h-0 p-3 space-y-3">
+      {/* ALTERAÇÃO VISUAL: Redução do espaço entre os blocos (p-2 space-y-2) */}
+      <div className="flex-1 flex flex-col min-h-0 p-2 space-y-2">
         
-        {/* MENSAGEM */}
+        {/* ALTERAÇÃO VISUAL: Alerta com padding e fonte menor */}
         <div className={`transition-all duration-200 shrink-0 ${message ? 'opacity-100 h-auto' : 'opacity-0 h-0 overflow-hidden'}`}>
           {message && (
-            <div className={`border p-2 rounded text-xs font-semibold flex items-center space-x-2 ${
+            <div className={`border p-1.5 rounded text-[10px] font-semibold flex items-center space-x-2 ${
               message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'
             }`}>
-              {message.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />}
+              {message.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />}
               <span>{message.text}</span>
             </div>
           )}
         </div>
 
-        
-        <div className="bg-white p-3 rounded-lg border border-gray-300 shadow-sm shrink-0">
-          <label className="block text-center text-[11px] font-bold text-pink-600 mb-2 tracking-widest uppercase">
+        {/* ALTERAÇÃO VISUAL: Card do Input mais fino */}
+        <div className="bg-white p-2 rounded-lg border border-gray-300 shadow-sm shrink-0">
+          <label className="block text-center text-[10px] font-bold text-pink-600 mb-1.5 tracking-widest uppercase">
             Bipar Etiqueta Rosa
           </label>
           <form onSubmit={handleScanBox} className="w-full">
@@ -171,59 +148,50 @@ export default function BlindReceiving({ onBack }: BlindReceivingProps) {
               value={labelBarcode}
               onChange={(e) => setLabelBarcode(e.target.value)}
               placeholder="Aguardando leitura da NF..."
-              className="w-full bg-pink-50 border-2 border-pink-300 px-3 py-3 rounded text-sm font-mono text-pink-900 focus:outline-none focus:border-pink-500 placeholder:text-pink-300"
+              // ALTERAÇÃO VISUAL: Input mais fino (py-1.5) e fonte menor (text-xs)
+              className="w-full bg-pink-50 border-2 border-pink-300 px-2 py-1.5 rounded text-xs font-mono text-pink-900 focus:outline-none focus:border-pink-500 placeholder:text-pink-300"
               autoComplete="off"
               disabled={loading || isSubmitting}
             />
           </form>
         </div>
 
-        {/* LISTA DE VOLUMES */}
         <div className="flex items-center justify-between shrink-0">
-          <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Volumes Conferidos</h3>
-          <span className="bg-[#002B49] text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Volumes Conferidos</h3>
+          <span className="bg-[#002B49] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Total: {totalCaixas}
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0 pb-2">
-          {scannedBoxes.length === 0 ? (
-            <div className="text-center py-6 text-gray-400 font-medium text-xs border-2 border-dashed border-gray-300 rounded-lg">
-              Nenhum volume bipado.
-            </div>
-          ) : (
-            scannedBoxes.map((box) => (
-              <div key={box.id} className="p-3 rounded-lg border border-gray-300 bg-white shadow-sm flex items-center justify-between animate-in fade-in duration-200">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-pink-100 p-2 rounded-md">
-                    <Package className="w-5 h-5 text-pink-600" />
-                  </div>
-                  <div>
-                    <span className="font-mono text-sm font-bold text-blue-900 block">NF: {box.nfNumber}</span>
-                    <span className="text-[10px] text-gray-400 font-mono truncate block max-w-[150px]">Cód: {box.labelBarcode}</span>
-                  </div>
+        {/* ALTERAÇÃO VISUAL: Lista com itens mais compactos */}
+        <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0 pb-1">
+          {scannedBoxes.map((box) => (
+            <div key={box.id} className="p-2 rounded-lg border border-gray-300 bg-white shadow-sm flex items-center justify-between animate-in fade-in">
+              <div className="flex items-center space-x-2">
+                <div className="bg-pink-100 p-1.5 rounded-md">
+                  <Package className="w-4 h-4 text-pink-600" />
                 </div>
-                <div className="flex items-center justify-center bg-gray-100 text-gray-800 text-xs font-bold w-8 h-8 rounded border border-gray-200">
-                  #{box.quantidade}
+                <div>
+                  <span className="font-mono text-xs font-bold text-blue-900 block">NF: {box.nfNumber}</span>
                 </div>
               </div>
-            ))
-          )}
+              <div className="flex items-center justify-center bg-gray-100 text-gray-800 text-[10px] font-bold w-6 h-6 rounded border border-gray-200">
+                #{box.quantidade}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* BOTÃO FINALIZAR */}
-      <div className="p-3 bg-white border-t border-gray-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] shrink-0">
+      {/* ALTERAÇÃO VISUAL: Rodapé e Botão Finalizar mais finos */}
+      <div className="p-2 bg-white border-t border-gray-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] shrink-0">
         <button
           onClick={handleFinishReceiving}
           disabled={scannedBoxes.length === 0 || isSubmitting}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg text-sm uppercase tracking-wider flex items-center justify-center space-x-2 shadow transition cursor-pointer"
+          // ALTERAÇÃO VISUAL: py-2, text-xs e ícone w-4
+          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold py-2 rounded-lg text-xs uppercase tracking-wider flex items-center justify-center space-x-1.5 shadow transition cursor-pointer"
         >
-          {isSubmitting ? (
-            <><span className="animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4"></span><span>Enviando...</span></>
-          ) : (
-            <><PackageCheck className="w-5 h-5" /><span>Finalizar ({totalCaixas} caixas)</span></>
-          )}
+          {isSubmitting ? <span>Enviando...</span> : <><PackageCheck className="w-4 h-4" /><span>Finalizar ({totalCaixas} caixas)</span></>}
         </button>
       </div>
     </div>
