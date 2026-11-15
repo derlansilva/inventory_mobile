@@ -1,13 +1,26 @@
 import axios from 'axios';
 
-// O Vite substitui o import.meta.env.VITE_API_URL pelo valor do arquivo .env correspondente
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api/v1/';
-
 const api = axios.create({
-  baseURL: baseURL,
+  baseURL: 'https://gamwms.onrender.com/api/v1/',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// ... (o resto do seu apiServices continua igual)
 export default api;
+
+
+
+
+/*
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'http://localhost:8081/api/v1/',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export default api;*/
